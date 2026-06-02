@@ -6,7 +6,7 @@ import { loginUser, registerUser ,logoutUser,refreshAccessToken,changeCurrentPas
     updateUserCoverImage,     // ← missing
     getWatchHistory,getUserChannelProfile     } from "../controllers/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
-import { verifyJWT } from "../middleware/auth.middlewware.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 const router= Router();
 
 router.route("/register").post(
