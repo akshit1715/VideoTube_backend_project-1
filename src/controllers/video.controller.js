@@ -72,22 +72,25 @@ const publishAVideo = asyncHandler(async (req, res) => {
     if(!thumbnailLocalPath){
         throw new ApiError(400,"thumbnail is required")
     }
-    const videoFile = await uploadOnCloudinary(videoLocalPath)
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    
+const videoUpload = await uploadOnCloudinary(videoLocalPath)
+const thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath)
 
-    if(!videoFile){
-        throw new ApiError(400,"video upload failed")
-    }
-    if(!thumbnail){
-        throw new ApiError(400,"thumbnail upload failed")
-    }
-    const video = await Video.create({
-        title,
-        description,
-        videoFile: videoFile.url,
-        thumbnail: thumbnail.url,
-        owner: req.user._id
-    })
+if(!videoUpload){
+    throw new ApiError(400, "Failed to upload video")
+}
+if(!thumbnailUpload){
+    throw new ApiError(400, "Failed to upload thumbnail")
+}
+
+const video = await Video.create({
+    title,
+    description,
+    videoFile: videoUpload.url,
+    thumbnail: thumbnailUpload.url,
+    duration: videoUpload.duration,  
+    owner: req.user._id
+})
     return res.status(201).json(new ApiResponse(201,"video published successfully",video))
 
 })
