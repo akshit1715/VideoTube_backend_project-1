@@ -83,7 +83,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         },
         {$unwind:"$video"}
     ])
-    return res.status(200).json(new ApiResponse(200,"liked videos fetched successfully", likedVideos))
+    return res.status(200).json(new ApiResponse(200, likedVideos, "liked videos fetched successfully"))
 })
 
 export {

@@ -5,8 +5,10 @@ import{Router} from "express"
 
 const router = Router()
 
-router.use(verifyJWT)
-router.route("/:videoId").get(getVideoComments).post(addComment)
-router.route("/comment/:commentId").put(updateComment).delete(deleteComment)
 
+router.route("/:videoId").get(getVideoComments) 
+
+router.use(verifyJWT)
+router.route("/:videoId").post(addComment)
+router.route("/c/:commentId").patch(updateComment).delete(deleteComment)
 export default router

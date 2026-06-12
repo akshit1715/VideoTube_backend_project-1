@@ -15,7 +15,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     if(userId){
         pipeline.push({
             $match:{
-                owner:newmongoose.Types.ObjectId(userId)
+                owner:new mongoose.Types.ObjectId(userId)
             }
         })
     }
@@ -52,7 +52,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         limit: parseInt(limit)
     }
     const videos = await Video.aggregatePaginate(Video.aggregate(pipeline), options)
-    return res.status(200).json(new ApiResponse(200,"videos fetched successfully",videos))
+    return res.status(200).json(new ApiResponse(200,videos,"videos fetched successfully"))
 
 })
 
@@ -86,12 +86,12 @@ if(!thumbnailUpload){
 const video = await Video.create({
     title,
     description,
-    videoFile: videoUpload.url,
-    thumbnail: thumbnailUpload.url,
+    videoFile: videoUpload.secure_url,
+    thumbnail: thumbnailUpload.secure_url,
     duration: videoUpload.duration,  
     owner: req.user._id
 })
-    return res.status(201).json(new ApiResponse(201,"video published successfully",video))
+    return res.status(201).json(new ApiResponse(201,video,"video published successfully"))
 
 })
 
@@ -129,7 +129,7 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(404,"video not found")
     }
     await Video.findByIdAndUpdate(videoId,{$inc:{views:1}})
-    return res.status(200).json(new ApiResponse(200,"video fetched successfully",video[0]))
+    return res.status(200).json(new ApiResponse(200,video[0],"video fetched successfully"))
     
 })
 
@@ -158,7 +158,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     video.thumbnail = thumbnailURL
 
     await video.save()
-    return res.status(200).json(new ApiResponse(200,"video updated successfully",video))
+    return res.status(200).json(new ApiResponse(200,video,"video updated successfully"))
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {

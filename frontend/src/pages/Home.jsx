@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 import { getAllVideos } from "../api/video.api.js"
 import Navbar from "../components/Navbar.jsx"
 import VideoCard from "../components/VideoCard.jsx"
@@ -7,13 +8,16 @@ function Home() {
     const [videos, setVideos] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
+    const location = useLocation()
+    
+    const searchQuery = new URLSearchParams(location.search).get("search") || ""
 
     useEffect(() => {
         const fetchVideos = async () => {
+            setLoading(true)
             try {
-                const res = await getAllVideos()
-                
-                setVideos(res.data.message.docs)
+                const res = await getAllVideos(searchQuery ? { query: searchQuery } : {})
+                setVideos(res.data.data.docs)
             } catch (err) {
                 setError("Failed to fetch videos")
             } finally {
@@ -21,12 +25,17 @@ function Home() {
             }
         }
         fetchVideos()
-    }, [])
+    }, [searchQuery])  // ← depend on searchQuery string, not location.search
 
     return (
         <div className="min-h-screen bg-gray-900">
             <Navbar />
             <div className="max-w-7xl mx-auto px-6 py-8">
+                {searchQuery && (
+                    <h2 className="text-white text-xl mb-6">
+                        Search results for: <span className="text-red-500">"{searchQuery}"</span>
+                    </h2>
+                )}
                 {loading && (
                     <p className="text-white text-center">Loading videos...</p>
                 )}

@@ -44,7 +44,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     }
 
     const comments = await Comment.aggregatePaginate(aggregate, options)
-    return res.status(200).json(new ApiResponse(200,"comments fetched successfully", comments))
+    return res.status(200).json(new ApiResponse(200,comments,"comments fetched successfully"))
 })
 //get videoId from req.params
 //get content from req.body
@@ -63,7 +63,7 @@ const addComment = asyncHandler(async (req, res) => {
         video: videoId,
         owner: req.user._id
     })
-    return res.status(201).json(new ApiResponse(201,"comment added successfully", comment))
+    return res.status(201).json(new ApiResponse(201,comment,"comment added successfully"))
 })
 //get commentId from req.params
 //get content from req.body
@@ -87,7 +87,7 @@ const updateComment = asyncHandler(async (req, res) => {
         }
         comment.content=content
         await comment.save()
-        return res.status(200).json(new ApiResponse(200,"comment updated successfully",comment))
+        return res.status(200).json(new ApiResponse(200,comment,"comment updated successfully"))
 
     
 })
@@ -106,7 +106,7 @@ const deleteComment = asyncHandler(async (req, res) => {
         throw new ApiError(403,"you are not authorized to delete this comment")
     }
     await Comment.findByIdAndDelete(commentId)
-    return res.status(200).json(new ApiResponse(200,"comment deleted successfully",null))
+    return res.status(200).json(new ApiResponse(200,null,"comment deleted successfully"))
         
 })
 

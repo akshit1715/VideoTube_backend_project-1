@@ -12,10 +12,10 @@ import { upload } from "../middleware/multer.middleware.js"
 
 const router = Router()
 
-// public route - no auth needed
-router.route("/").get(getAllVideos)
 
-// protected routes
+router.route("/").get(getAllVideos)
+router.route("/:videoId").get(getVideoById)
+
 router.use(verifyJWT)
 
 router.route("/").post(
@@ -26,11 +26,12 @@ router.route("/").post(
     publishAVideo
 )
 
+
+router.route("/toggle/publish/:videoId").patch(togglePublishStatus)
+
 router.route("/:videoId")
     .get(getVideoById)
     .patch(upload.single("thumbnail"), updateVideo)
     .delete(deleteVideo)
-
-router.route("/toggle/publish/:videoId").patch(togglePublishStatus)
 
 export default router

@@ -76,8 +76,8 @@ const registerUser= asyncHandler(async(req,res) =>{
     }
     const user= await User.create({
         fullName,
-        avatar:avatar.url,
-        coverImage:coverImage?.url || "",
+        avatar:avatar.secure_url,
+        coverImage:coverImage?.secure_url || "",
         email,
         password,
         username:username.toLowerCase()
@@ -154,36 +154,43 @@ const logoutUser = asyncHandler(async(req,res) =>{
  return res.status(200).clearCookie("accessToken",options).clearCookie("refreshToken",options).json(new ApiResponse(200,null,"User logged out successfully"))
 })
 const refreshAccessToken = asyncHandler(async(req,res)=>{
- const incomingRefreshToken =  req.cookies.refreshToken || req.body.refreshToken  
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken  
 
- if(!incomingRefreshToken){
-    throw new ApiError(401,"unauthorized request")
- }
+    if(!incomingRefreshToken){
+        throw new ApiError(401,"unauthorized request")
+    }
 
- try {
-    const decodedToken =jwt.verify(
-       incomingRefreshToken,
-       process.env.REFRESH_TOKEN_SECRET
-    )
-   const user = await User.findById(decodedToken?._id)
-   if(!user){
-       throw new ApiError(401,"invalid refresh token")
-   }
-   if(incomingRefreshToken !== user?.refreshToken){
-       throw new ApiError(401,"refresh token is expired or used")
-   }
-   const options ={
-       httpOnly:true,
-       secure:process.env.NODE_ENV === "production"
-   }
-   const {accessToken, newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
-   
-   return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",newRefreshToken,options).json(
-       new ApiResponse(200,{accessToken,refreshToken:newRefreshToken},"Access token refreshed successfully")
-   )
- } catch (error) {
-    throw new ApiError(401,"invalid refresh token"||error?.message)
- }
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        )
+
+        const user = await User.findById(decodedToken?._id)
+        
+        if(!user){
+            throw new ApiError(401,"invalid refresh token")
+        }
+        
+        if(incomingRefreshToken !== user?.refreshToken){
+            throw new ApiError(401,"refresh token is expired or used")
+        }
+        
+        const options = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production"
+        }
+        
+        const {accessToken, refreshToken: newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+        
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(new ApiResponse(200, {accessToken, refreshToken: newRefreshToken}, "Access token refreshed successfully"))
+    
+    } catch (error) {
+        throw new ApiError(401, error?.message || "invalid refresh token")
+    }
 })
 
 const changeCurrentPassword =asyncHandler(async(req,res)=>{
@@ -205,10 +212,10 @@ const getCurrentUser = asyncHandler(async(req,res)=>{
 })
 const updateAccountDetails = asyncHandler(async(req,res)=>{
     const{fullName,email} = req.body
-    if(!fullNmae || !email){
+    if(!fullName || !email){
         throw new ApiError(400,"all fields are required")
     }
-    const user=User.findByIdAndUpdate(req.user?._id ,
+    const user= await User.findByIdAndUpdate(req.user?._id ,
         {
             $set:{
                 fullName,
@@ -227,15 +234,15 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
     }
         const avatar = await uploadOnCloudinary(avatarLocalPath)
 
-        if(!avatar.url){
+        if(!avatar.secure_url){
             throw new ApiError(400,"error while uploading on the avatar")
         }
    const user = await User.findByIdAndUpdate(req.user?._id,{
         $set:{
-            avatar:avatar.url
+            avatar:avatar.secure_url
         }
     },{new:true}).select("-password")
-    return res.status(200).json(new ApiResponse(200,avatar.url,"Avatar updated successfully"))
+    return res.status(200).json(new ApiResponse(200,avatar.secure_url,"Avatar updated successfully"))
 })
 const updateUserCoverImage = asyncHandler(async(req,res)=>{
     const coverImageLocalPath = req.file?.path
@@ -244,12 +251,12 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
     }
         const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-        if(!coverImage.url){
+        if(!coverImage.secure_url){
             throw new ApiError(400,"error while uploading on the cover image")
         }
     const user =await User.findByIdAndUpdate(req.user?._id,{
         $set:{
-            coverImage:coverImage.url
+            coverImage:coverImage.secure_url
         }
     },{new:true}).select("-password")
 
@@ -258,6 +265,7 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
 const getUserChannelProfile = asyncHandler(async(req,res)=>{
  
     const{username}=req.params
+     console.log("username received:", username)
 
     if(!username?.trim()){
         throw new ApiError(400,"Username is missing")

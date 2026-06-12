@@ -1,27 +1,31 @@
 import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import Navbar from "../components/Navbar.jsx"
 import VideoCard from "../components/VideoCard.jsx"
 import api from "../api/axios.js"
 
+
 function Channel() {
     const { username } = useParams()
     const { user: loggedInUser } = useSelector((state) => state.auth)
+    const navigate = useNavigate()
+
     const [channel, setChannel] = useState(null)
     const [videos, setVideos] = useState([])
     const [loading, setLoading] = useState(true)
     const [subscribed, setSubscribed] = useState(false)
+    const [showUnsubscribeDropdown, setShowUnsubscribeDropdown] = useState(false)
 
     useEffect(() => {
         const fetchChannel = async () => {
             try {
                 const res = await api.get(`/users/c/${username}`)
-                setChannel(res.data.message)
-                setSubscribed(res.data.message.isSubscribed)
+                setChannel(res.data.data)
+                setSubscribed(res.data.data.isSubscribed)
 
-                const videosRes = await api.get(`/videos?userId=${res.data.message._id}`)
-                setVideos(videosRes.data.message.docs)
+                const videosRes = await api.get(`/videos?userId=${res.data.data._id}`)
+                setVideos(videosRes.data.data.docs || [])
             } catch (err) {
                 console.error("Failed to fetch channel", err)
             } finally {
@@ -31,10 +35,22 @@ function Channel() {
         fetchChannel()
     }, [username])
 
+    useEffect(() => {
+        const handleClickOutside = (e) =>{
+            if(!e.target.closest(".subscribe-dropdown")){
+            setShowUnsubscribeDropdown(false)
+        }
+        } 
+        document.addEventListener("click", handleClickOutside)
+        return () => document.removeEventListener("click", handleClickOutside)
+    }, [])
+
     const handleSubscribe = async () => {
         try {
             await api.post(`/subscriptions/c/${channel._id}`)
-            setSubscribed(!subscribed)
+            const res = await api.get(`/users/c/${username}`)
+            setChannel(res.data.data)
+            setSubscribed(res.data.data.isSubscribed)
         } catch (err) {
             console.error("Failed to toggle subscription", err)
         }
@@ -79,24 +95,61 @@ function Channel() {
                             {channel?.subscribersCount} subscribers · {channel?.channelsSubscribedToCount} subscribed
                         </p>
                     </div>
+
+                    {/* Subscribe Button */}
                     {loggedInUser?._id !== channel?._id && (
-                        <button
-                            onClick={handleSubscribe}
-                            className={`mb-2 px-6 py-2 rounded-full font-semibold transition ${
-                                subscribed
-                                    ? "bg-gray-600 text-white hover:bg-gray-500"
-                                    : "bg-red-500 text-white hover:bg-red-600"
-                            }`}
-                        >
-                            {subscribed ? "Subscribed" : "Subscribe"}
-                        </button>
+                        <div className="relative mb-2 subscribe-dropdown">
+                            {subscribed ? (
+    <>
+        <button
+            onClick={() => setShowUnsubscribeDropdown(!showUnsubscribeDropdown)}
+            className="flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition bg-gray-700 text-white hover:bg-gray-600"
+           
+        >
+            Subscribed
+            <span className="text-xs">▼</span>
+        </button>
+        {showUnsubscribeDropdown && (
+            <div className="absolute top-12 right-0 bg-gray-800 rounded-lg shadow-lg z-10 w-40">
+                <button
+                    onClick={async () => {
+                        setShowUnsubscribeDropdown(false)
+                        await handleSubscribe()
+                    }}
+                    className="w-full text-left px-4 py-3 text-white hover:bg-gray-700 rounded-lg text-sm"
+                >
+                    Unsubscribe
+                </button>
+            </div>
+        )}
+    </>
+                            ) : (
+                                <button
+                                    onClick={handleSubscribe}
+                                    className="px-6 py-2 rounded-full font-semibold transition bg-red-500 text-white hover:bg-red-600"
+                                >
+                                    Subscribe
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
-
                 {/* Videos */}
-                <div className="mt-8">
-                    <h2 className="text-white text-xl font-semibold mb-4">Videos</h2>
-                    {videos.length === 0 ? (
+<div className="mt-8">
+    <div className="flex items-center justify-between mb-4">
+        <h2 className="text-white text-xl font-semibold">Videos</h2>
+        {loggedInUser?._id === channel?._id && (
+            <button
+                onClick={() => navigate("/edit-profile")}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition"
+            >
+                Edit Profile
+            </button>
+        )}
+    </div>
+    {videos.length === 0 ? (
+
+                
                         <p className="text-gray-400">No videos uploaded yet</p>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
