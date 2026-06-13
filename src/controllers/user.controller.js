@@ -128,9 +128,10 @@ const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._i
 
 const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-const options ={
-    httpOnly:true,
-    secure:process.env.NODE_ENV === "production" 
+const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none"
 }
 return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(
     new ApiResponse(200,{user:loggedInUser,accessToken,refreshToken},
@@ -148,10 +149,11 @@ const logoutUser = asyncHandler(async(req,res) =>{
 {
     new:true
 })
- const options ={
-    httpOnly:true,
-    secure:process.env.NODE_ENV === "production" 
- }
+ const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none"
+}
  return res.status(200).clearCookie("accessToken",options).clearCookie("refreshToken",options).json(new ApiResponse(200,null,"User logged out successfully"))
 })
 const refreshAccessToken = asyncHandler(async(req,res)=>{
@@ -178,9 +180,10 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
         }
         
         const options = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production"
-        }
+    httpOnly: true,
+    secure: true,
+    sameSite: "none"
+}
         
         const {accessToken, refreshToken: newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
         
