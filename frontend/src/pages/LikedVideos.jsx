@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { getLikedVideos } from "../api/like.api.js"
 import Navbar from "../components/Navbar.jsx"
 import VideoCard from "../components/VideoCard.jsx"
+import VideoCardSkeleton from "../components/VideoCardSkeleton.jsx"
 
 function LikedVideos() {
     const [videos, setVideos] = useState([])
@@ -29,7 +30,16 @@ function LikedVideos() {
             <Navbar />
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <h1 className="text-2xl font-bold text-white mb-6">Liked Videos</h1>
-                {loading && <p className="text-white text-center">Loading...</p>}
+
+                {loading && (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, i) => (
+            <VideoCardSkeleton key={i} />
+        ))}
+    </div>
+)}
+
+
                 {!loading && videos.length === 0 && (
                     <p className="text-gray-400 text-center">No liked videos yet</p>
                 )}

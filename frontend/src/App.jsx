@@ -15,7 +15,7 @@ import LikedVideos from "./pages/LikedVideos.jsx"
 import WatchHistory from "./pages/WatchHistory.jsx"
 import Playlists from "./pages/Playlists.jsx"
 import PlaylistDetails from "./pages/PlaylistDetails.jsx"
-
+import NotFound from "./pages/NotFound.jsx"
 function App() {
     const dispatch = useDispatch()
     const [showSplash, setShowSplash] = useState(true)
@@ -80,6 +80,7 @@ function App() {
                 <Route path="/playlist/:playlistId" element={
                     <ProtectedRoute><PlaylistDetails /></ProtectedRoute>
                 } />
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
     )

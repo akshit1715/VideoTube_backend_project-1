@@ -4,6 +4,7 @@ import { getAllVideos } from "../api/video.api.js"
 import api from "../api/axios.js"
 import Navbar from "../components/Navbar.jsx"
 import VideoCard from "../components/VideoCard.jsx"
+import VideoCardSkeleton from "../components/VideoCardSkeleton.jsx"
 
 function Home() {
     const [videos, setVideos] = useState([])
@@ -79,7 +80,13 @@ function Home() {
                     </div>
                 )}
 
-                {loading && <p className="text-white text-center">Loading videos...</p>}
+                {loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+               {[...Array(8)].map((_, i) => (
+              <VideoCardSkeleton key={i} />
+              ))}
+             </div>
+                 )}
                 {error && <p className="text-red-500 text-center">{error}</p>}
                 {!loading && videos.length === 0 && !searchQuery && (
                     <p className="text-gray-400 text-center">No videos found</p>
