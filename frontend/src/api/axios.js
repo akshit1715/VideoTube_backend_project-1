@@ -1,10 +1,12 @@
 import axios from "axios"
 
-const instance = axios.create({
-    baseURL: "http://localhost:8000/api/v1",
+const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL 
+        ? `${import.meta.env.VITE_API_URL}/api/v1`
+        : "http://localhost:8000/api/v1",
     withCredentials: true
 })
 
 
 
-export default instance
+export default api
