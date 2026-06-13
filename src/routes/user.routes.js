@@ -4,7 +4,9 @@ import { loginUser, registerUser ,logoutUser,refreshAccessToken,changeCurrentPas
     updateAccountDetails,     // ← missing
     updateUserAvatar,         // ← missing
     updateUserCoverImage,     // ← missing
-    getWatchHistory,getUserChannelProfile     } from "../controllers/user.controller.js";
+    getWatchHistory,getUserChannelProfile ,
+    addToWatchHistory
+    } from "../controllers/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 const router= Router();
@@ -35,4 +37,5 @@ router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar
 router.route("/cover-image").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage)
 router.route("/c/:username").get(getUserChannelProfile)
 router.route("/watch-history").get(verifyJWT,getWatchHistory)
+router.route("/watch-history/:videoId").patch(verifyJWT,addToWatchHistory)
 export default router;

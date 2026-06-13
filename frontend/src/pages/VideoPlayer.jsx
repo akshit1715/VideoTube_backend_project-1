@@ -5,6 +5,7 @@ import { getVideoById } from "../api/video.api.js"
 import { getVideoComments, addComment, deleteComment } from "../api/comment.api.js"
 import { toggleVideoLike,getLikedVideos } from "../api/like.api.js"
 import Navbar from "../components/Navbar.jsx"
+import api from "../api/axios.js"
 
 function VideoPlayer() {
     const { videoId } = useParams()
@@ -39,6 +40,7 @@ function VideoPlayer() {
                     (item) =>String (item.video?._id) === String(videoId)
                 )
                 setLiked(isLiked)
+                 await api.patch(`/users/watch-history/${videoId}`)
             }
 
             } catch (err) {

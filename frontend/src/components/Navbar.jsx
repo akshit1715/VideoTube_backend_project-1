@@ -9,6 +9,7 @@ function Navbar() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const [searchQuery, setSearchQuery] = useState("")
+    const [showDropdown, setShowDropdown] = useState(false)
 
     const handleLogout = async () => {
         try {
@@ -60,18 +61,62 @@ function Navbar() {
                         >
                             Upload
                         </button>
-                        <img
-                            src={user?.avatar}
-                            alt={user?.username}
-                            className="w-9 h-9 rounded-full object-cover cursor-pointer"
-                            onClick={() => navigate(`/channel/${user?.username}`)}
-                        />
-                        <button
-                            onClick={handleLogout}
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition"
-                        >
-                            Logout
-                        </button>
+
+                        {/* Avatar with dropdown */}
+                        <div className="relative">
+                            <img
+                                src={user?.avatar}
+                                alt={user?.username}
+                                className="w-9 h-9 rounded-full object-cover cursor-pointer ring-2 ring-transparent hover:ring-red-500 transition"
+                                onClick={() => setShowDropdown(!showDropdown)}
+                            />
+                            {showDropdown && (
+    <div className="absolute right-0 top-12 bg-gray-800 rounded-lg shadow-lg z-50 w-48 py-2">
+        <div className="px-4 py-2 border-b border-gray-700">
+            <p className="text-white text-sm font-semibold">{user?.fullName}</p>
+            <p className="text-gray-400 text-xs">@{user?.username}</p>
+        </div>
+        <button
+            onClick={() => { navigate(`/channel/${user?.username}`); setShowDropdown(false) }}
+            className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 text-sm"
+        >
+            👤 Your Channel
+        </button>
+        <button
+            onClick={() => { navigate("/liked-videos"); setShowDropdown(false) }}
+            className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 text-sm"
+        >
+            👍 Liked Videos
+        </button>
+        <button
+            onClick={() => { navigate("/watch-history"); setShowDropdown(false) }}
+            className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 text-sm"
+        >
+            🕐 Watch History
+        </button>
+        <button
+            onClick={() => { navigate("/playlists"); setShowDropdown(false) }}
+            className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 text-sm"
+        >
+            📋 Playlists
+        </button>
+        <button
+            onClick={() => { navigate("/edit-profile"); setShowDropdown(false) }}
+            className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 text-sm"
+        >
+            ✏️ Edit Profile
+        </button>
+        <div className="border-t border-gray-700 mt-2 pt-2">
+            <button
+                onClick={() => { handleLogout(); setShowDropdown(false) }}
+                className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-700 text-sm"
+            >
+                🚪 Logout
+            </button>
+        </div>
+    </div>
+)}
+                        </div>
                     </>
                 ) : (
                     <>

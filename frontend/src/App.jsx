@@ -11,7 +11,9 @@ import Channel from "./pages/Channel.jsx"
 import UploadVideo from "./pages/UploaadVideo.jsx"
 import EditProfile from "./pages/EditProfile.jsx"
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
-
+import LikedVideos from "./pages/LikedVideos.jsx"
+import WatchHistory from "./pages/WatchHistory.jsx"
+import Playlists from "./pages/Playlists.jsx"
 function App() {
     const dispatch = useDispatch()
 
@@ -43,6 +45,21 @@ function App() {
                 <Route path="/edit-profile" element={
                     <ProtectedRoute>
                         <EditProfile />
+                    </ProtectedRoute>
+                } />
+                <Route path="/liked-videos" element={
+                    <ProtectedRoute>
+                        <LikedVideos />
+                    </ProtectedRoute>
+                } />
+                <Route path="/watch-history" element={
+                    <ProtectedRoute>
+                        <WatchHistory />
+                    </ProtectedRoute>
+                } />
+                <Route path="/playlists" element={
+                    <ProtectedRoute>
+                        <Playlists />
                     </ProtectedRoute>
                 } />
             </Routes>
