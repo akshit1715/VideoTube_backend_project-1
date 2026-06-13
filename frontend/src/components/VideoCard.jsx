@@ -5,7 +5,7 @@ function VideoCard({ video }) {
 
     return (
         <div
-            onClick={() => navigate(`/video/${video._id}`)}
+            onClick={() => navigate(`/watch/${video._id}`)}
             className="cursor-pointer group"
         >
             <div className="relative rounded-lg overflow-hidden">

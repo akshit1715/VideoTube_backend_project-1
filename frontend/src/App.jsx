@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useState,useEffect } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { setUser, clearUser } from "./store/authSlice.js"
@@ -14,8 +14,10 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx"
 import LikedVideos from "./pages/LikedVideos.jsx"
 import WatchHistory from "./pages/WatchHistory.jsx"
 import Playlists from "./pages/Playlists.jsx"
+import PlaylistDetails from "./pages/PlaylistDetails.jsx"
 function App() {
     const dispatch = useDispatch()
+    const [showSplash, setShowSplash] = useState(true)
 
     useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -23,11 +25,21 @@ function App() {
             const res = await getCurrentUser()
             dispatch(setUser(res.data.data))
         } catch (err) {
-            dispatch(clearUser())  // ← just clear user on 401, don't refresh
+            dispatch(clearUser())  
         }
     }
     fetchCurrentUser()
+    const timer = setTimeout(() => setShowSplash(false), 2000)
+        return () => clearTimeout(timer)
 }, [])
+ if (showSplash) return (
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <h1 className="text-5xl font-bold text-white">
+                Video<span className="text-red-500">Tube</span>
+            </h1>
+        </div>
+    )
+
 
     return (
         <BrowserRouter>
@@ -35,7 +47,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/video/:videoId" element={<VideoPlayer />} />
+                <Route path="/watch/:videoId" element={<VideoPlayer />} />
                 <Route path="/channel/:username" element={<Channel />} />
                 <Route path="/upload" element={
                     <ProtectedRoute>
@@ -60,6 +72,11 @@ function App() {
                 <Route path="/playlists" element={
                     <ProtectedRoute>
                         <Playlists />
+                    </ProtectedRoute>
+                } />
+                <Route path="/playlist/:playlistId" element={
+                    <ProtectedRoute>
+                        <PlaylistDetails />
                     </ProtectedRoute>
                 } />
             </Routes>

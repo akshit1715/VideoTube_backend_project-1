@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
-import { useParams,useNavigate } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { getVideoById } from "../api/video.api.js"
 import { getVideoComments, addComment, deleteComment } from "../api/comment.api.js"
-import { toggleVideoLike,getLikedVideos } from "../api/like.api.js"
+import { toggleVideoLike, getLikedVideos } from "../api/like.api.js"
 import Navbar from "../components/Navbar.jsx"
 import api from "../api/axios.js"
+import AddToPlaylist from "../components/AddToPlaylist.jsx"
 
 function VideoPlayer() {
     const { videoId } = useParams()
@@ -15,59 +16,90 @@ function VideoPlayer() {
     const [comments, setComments] = useState([])
     const [newComment, setNewComment] = useState("")
     const [liked, setLiked] = useState(false)
+    const [disliked, setDisliked] = useState(false)
+    const [subscribed, setSubscribed] = useState(false)
+    const [shareMsg, setShareMsg] = useState("")
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                 
-                const videoRes = await getVideoById(videoId)
-                
+   useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const videoRes = await getVideoById(videoId)
+            setVideo(videoRes.data.data)
 
-                setVideo(videoRes.data.data)
+            const commentsRes = await getVideoComments(videoId)
+            setComments(commentsRes.data.data?.docs || [])
 
-                const commentsRes = await getVideoComments(videoId)
-
-                setComments(commentsRes.data.data?.docs || [])
-                if(isAuthenticated){
+           
+            if (isAuthenticated) {
                 const likedRes = await getLikedVideos()
-               
                 const likedVideos = likedRes.data.data
-                
-
                 const isLiked = likedVideos.some(
-                    (item) =>String (item.video?._id) === String(videoId)
+                    (item) => String(item.video?._id) === String(videoId)
                 )
                 setLiked(isLiked)
-                 await api.patch(`/users/watch-history/${videoId}`)
+
+                
+                const subRes = await api.get(`/subscriptions/u/${user._id}`)
+                console.log("subRes.data.data:", subRes.data.data)
+                const subscribedChannels = subRes.data.data || []
+                const isSubscribed = subscribedChannels.some(
+                    sub => sub.channel?._id === videoRes.data.data?.owner?._id
+                )
+                setSubscribed(isSubscribed)
+
+                await api.patch(`/users/watch-history/${videoId}`)
             }
 
-            } catch (err) {
-                setError("Failed to fetch video")
-            } finally {
-                setLoading(false)
-            }
+        } catch (err) {
+            console.error(err)
+            setError("Failed to fetch video")
+        } finally {
+            setLoading(false)
         }
-        fetchData()
-    }, [videoId, isAuthenticated])
+    }
+    fetchData()
+}, [videoId, isAuthenticated])
 
     const handleLike = async () => {
-        if(!isAuthenticated) return
+        if (!isAuthenticated) return
         try {
             await toggleVideoLike(videoId)
+            if (disliked) setDisliked(false)
             setLiked(!liked)
         } catch (err) {
             console.error("Failed to toggle like", err)
         }
     }
 
+    const handleDislike = () => {
+        if (!isAuthenticated) return
+        if (liked) setLiked(false)
+        setDisliked(!disliked)
+    }
+
+    const handleSubscribe = async () => {
+        if (!isAuthenticated) return
+        try {
+            await api.post(`/subscriptions/toggle/${video?.owner?._id}`)
+            setSubscribed(!subscribed)
+        } catch (err) {
+            console.error("Failed to toggle subscription", err)
+        }
+    }
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href)
+        setShareMsg("Link copied!")
+        setTimeout(() => setShareMsg(""), 2000)
+    }
+
     const handleAddComment = async (e) => {
         e.preventDefault()
-        if(!newComment.trim()) return
+        if (!newComment.trim()) return
         try {
             const res = await addComment(videoId, { content: newComment })
-
             setComments([res.data.data, ...comments])
             setNewComment("")
         } catch (err) {
@@ -84,14 +116,14 @@ function VideoPlayer() {
         }
     }
 
-    if(loading) return (
+    if (loading) return (
         <div className="min-h-screen bg-gray-900">
             <Navbar />
             <p className="text-white text-center mt-20">Loading...</p>
         </div>
     )
 
-    if(error) return (
+    if (error) return (
         <div className="min-h-screen bg-gray-900">
             <Navbar />
             <p className="text-red-500 text-center mt-20">{error}</p>
@@ -112,34 +144,80 @@ function VideoPlayer() {
                 {/* Video Info */}
                 <div className="mt-4">
                     <h1 className="text-white text-2xl font-bold">{video?.title}</h1>
-                    <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
                         <p className="text-gray-400 text-sm">{video?.views} views</p>
-                        <button
-                            onClick={handleLike}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-                                liked
-                                    ? "bg-red-500 text-white"
-                                    : "bg-gray-700 text-white hover:bg-gray-600"
-                            }`}
-                        >
-                            👍 {liked ? "Liked" : "Like"}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {/* Like */}
+                            <button
+                                onClick={handleLike}
+                                className={`flex items-center gap-1 px-4 py-2 rounded-lg transition ${
+                                    liked ? "bg-red-500 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                                }`}
+                            >
+                                👍 {liked ? "Liked" : "Like"}
+                            </button>
+
+                            {/* Dislike */}
+                            <button
+                                onClick={handleDislike}
+                                className={`flex items-center gap-1 px-4 py-2 rounded-lg transition ${
+                                    disliked ? "bg-gray-500 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                                }`}
+                            >
+                                👎
+                            </button>
+
+                            {/* Share */}
+                            <div className="relative">
+                                <button
+                                    onClick={handleShare}
+                                    className="flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition"
+                                >
+                                    🔗 Share
+                                </button>
+                                {shareMsg && (
+                                    <span className="absolute -top-8 left-0 bg-gray-800 text-green-400 text-xs px-2 py-1 rounded whitespace-nowrap">
+                                        {shareMsg}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Save to Playlist */}
+                            {isAuthenticated && <AddToPlaylist videoId={videoId} />}
+                        </div>
                     </div>
                 </div>
 
-                {/* Owner Info */}
-                <div className="flex items-center gap-3 mt-4 pb-4 border-b border-gray-700 cursor-pointer"
-                onClick={() => navigate(`/channel/${video?.owner?.username}`)}
-                >
-                    <img
-                        src={video?.owner?.avatar}
-                        alt={video?.owner?.username}
-                        className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div>
-                        <p className="text-white font-semibold">{video?.owner?.fullName}</p>
-                        <p className="text-gray-400 text-sm">@{video?.owner?.username}</p>
+                {/* Owner Info + Subscribe */}
+                <div className="flex items-center justify-between mt-4 pb-4 border-b border-gray-700">
+                    <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => navigate(`/channel/${video?.owner?.username}`)}
+                    >
+                        <img
+                            src={video?.owner?.avatar}
+                            alt={video?.owner?.username}
+                            className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                            <p className="text-white font-semibold">{video?.owner?.fullName}</p>
+                            <p className="text-gray-400 text-sm">@{video?.owner?.username}</p>
+                        </div>
                     </div>
+
+                    {/* Subscribe button  */}
+                    {isAuthenticated && user?._id !== video?.owner?._id && (
+                        <button
+                            onClick={handleSubscribe}
+                            className={`px-5 py-2 rounded-full font-semibold text-sm transition ${
+                                subscribed
+                                    ? "bg-gray-700 text-white hover:bg-gray-600"
+                                    : "bg-red-500 text-white hover:bg-red-600"
+                            }`}
+                        >
+                            {subscribed ? "Subscribed" : "Subscribe"}
+                        </button>
+                    )}
                 </div>
 
                 {/* Description */}
@@ -153,7 +231,6 @@ function VideoPlayer() {
                         Comments ({comments.length})
                     </h2>
 
-                    {/* Add Comment */}
                     {isAuthenticated && (
                         <form onSubmit={handleAddComment} className="flex gap-3 mb-6">
                             <img
@@ -179,7 +256,6 @@ function VideoPlayer() {
                         </form>
                     )}
 
-                    {/* Comments List */}
                     <div className="space-y-4">
                         {comments.length === 0 ? (
                             <p className="text-gray-400">No comments yet. Be the first to comment!</p>

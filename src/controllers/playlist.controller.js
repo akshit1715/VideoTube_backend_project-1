@@ -37,7 +37,14 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
+    console.log("playlistId:", playlistId)
+    console.log("videoId:", videoId)
+    
+     const allPlaylists = await Playlist.find()
+    console.log("All playlists in DB:", allPlaylists.map(p => p._id.toString()))
+
     const playlist = await Playlist.findById(playlistId)
+    console.log("Found playlist:", playlist)
     if(!playlist){
         throw new ApiError(404,"playlist not found")
     }
